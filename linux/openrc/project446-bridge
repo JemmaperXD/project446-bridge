@@ -1,0 +1,27 @@
+#!/sbin/openrc-run
+# Project 446 bridge для OpenRC.
+# Слушает 127.0.0.1:443 и проксирует TCP до gc.project446.com:443.
+
+name="project446-bridge"
+description="TCP bridge to gc.project446.com via public HTTP proxies"
+
+directory="/opt/project446-bridge"
+command="/usr/bin/env"
+command_args="BRIDGE_STATE_DIR=/var/lib/project446-bridge /usr/bin/python3 ${directory}/bridge.py"
+
+supervisor="supervise-daemon"
+respawn_delay_seconds=3
+respawn_max=0
+pidfile="/run/${RC_SVCNAME}.pid"
+output_log="/var/lib/project446-bridge/bridge.log"
+error_log="/var/lib/project446-bridge/bridge.log"
+
+depend() {
+    need net
+    after firewall
+}
+
+start_pre() {
+    checkpath -d -m 0750 /var/lib/project446-bridge
+    touch /var/lib/project446-bridge/bridge.log
+}

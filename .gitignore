@@ -1,0 +1,26 @@
+# Python не коммитим: он скачивается при сборке (windows/build_windows.sh)
+python/
+.cache/
+
+# Сборки и архивы
+dist/
+*.zip
+!windows/*.zip
+
+# Состояние и логи моста
+bridge.log
+bridge.log.*
+good_proxies.json
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Редакторы / ОС
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+desktop.ini
