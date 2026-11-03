@@ -37,7 +37,7 @@
 3. В Steam → Свойства игры → Параметры запуска:
 
    ```
-   "C:\Project446\start_bridge.bat" %command%
+   "C:\Project446\start_bridge.bat" %command% -novid -secure
    ```
 
 4. Нажмите «Играть».
