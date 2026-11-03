@@ -64,7 +64,7 @@ C:\Project446\
 4. Вставьте туда ровно это (одной строкой):
 
 ```
-"C:\Project446\start_bridge.bat" %command%
+"C:\Project446\start_bridge.bat" %command% -novid -secure
 ```
 
 > Если распаковали в другую папку — замените `C:\Project446` на свою.
