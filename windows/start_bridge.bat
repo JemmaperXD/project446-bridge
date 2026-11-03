@@ -4,7 +4,7 @@ rem ============================================================
 rem  Project 446 — запуск игры вместе с мостом (Windows)
 rem
 rem  Вставляется в Steam -> Свойства игры -> Параметры запуска:
-rem      "C:\Project446\start_bridge.bat" %command%
+rem      "C:\Project446\start_bridge.bat" %command% -secure -novid
 rem
 rem  Если мост уже слушает 127.0.0.1:443 — он переиспользуется.
 rem  Иначе bridge.py запускается в фоне, окно ждёт порт и

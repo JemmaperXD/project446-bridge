@@ -37,8 +37,11 @@
 3. В Steam → Свойства игры → Параметры запуска:
 
    ```
-   "C:\Project446\start_bridge.bat" %command% -novid -secure
+   "C:\Project446\start_bridge.bat" %command% -secure -novid
    ```
+
+   `-secure` — защищённый режим, `-novid` — без вступительного видео.
+   Флаги должны идти после `%command%`.
 
 4. Нажмите «Играть».
 
@@ -73,6 +76,14 @@ tail -f /var/lib/project446-bridge/bridge.log
 sudo systemctl stop project446-bridge
 sudo ./linux/systemd/uninstall.sh --purge
 ```
+
+В Steam → Свойства игры → Параметры запуска рекомендуется:
+
+```
+%command% -secure -novid
+```
+
+`-secure` — защищённый режим, `-novid` — без вступительного видео.
 
 ## Ручной запуск (любая ОС)
 
