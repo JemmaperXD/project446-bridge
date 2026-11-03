@@ -46,6 +46,26 @@ if errorlevel 1 (
     echo.
 )
 
+rem --- тихая проверка обновлений: результат кэшируется на 24 часа ---
+set "UPD=%~dp0check_updates.ps1"
+if not exist "%UPD%" goto skip_update
+set "USTATE="
+set "UCUR="
+set "ULAT="
+for /f "usebackq tokens=1,2,3 delims= " %%a in (`powershell -NoProfile -ExecutionPolicy Bypass -File "%UPD%"`) do (
+    set "USTATE=%%a"
+    set "UCUR=%%b"
+    set "ULAT=%%c"
+)
+if not "%USTATE%"=="UPDATE" goto skip_update
+echo.
+echo  ============================================================
+echo   Доступно обновление моста: %UCUR% -^> %ULAT%
+echo   Скачать: https://github.com/JemmaperXD/project446-bridge/releases/latest
+echo   (или запустите 2_CHECK_UPDATES.bat для подробностей)
+echo  ============================================================
+:skip_update
+
 netstat -ano | findstr /C:"127.0.0.1:%PORT%" | findstr /C:"LISTENING" >nul 2>&1
 if not errorlevel 1 goto run_game
 

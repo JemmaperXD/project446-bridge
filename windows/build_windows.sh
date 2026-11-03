@@ -35,8 +35,9 @@ rm -rf "$STAGE" "$ZIP"
 mkdir -p "$STAGE/python"
 
 cp "$ROOT/bridge.py" "$STAGE/"
-cp "$HERE/README.md" "$HERE/1_SETUP.bat" "$HERE/start_bridge.bat" \
-   "$HERE/fix_hosts.ps1" "$STAGE/"
+cp "$HERE/README.md" "$HERE/1_SETUP.bat" "$HERE/2_CHECK_UPDATES.bat" \
+   "$HERE/3_UNINSTALL.bat" "$HERE/start_bridge.bat" "$HERE/fix_hosts.ps1" \
+   "$HERE/remove_hosts.ps1" "$HERE/check_updates.ps1" "$STAGE/"
 
 if command -v unzip >/dev/null 2>&1; then
     unzip -q "$PY_ZIP" -d "$STAGE/python"
@@ -48,7 +49,10 @@ PYEOF
 fi
 
 # .bat/.ps1 должны быть в CRLF (Windows-friendly).
-python3 - "$STAGE/1_SETUP.bat" "$STAGE/start_bridge.bat" "$STAGE/fix_hosts.ps1" <<'PYEOF'
+python3 - "$STAGE/1_SETUP.bat" "$STAGE/2_CHECK_UPDATES.bat" \
+         "$STAGE/3_UNINSTALL.bat" "$STAGE/start_bridge.bat" \
+         "$STAGE/fix_hosts.ps1" "$STAGE/remove_hosts.ps1" \
+         "$STAGE/check_updates.ps1" <<'PYEOF'
 import sys
 for path in sys.argv[1:]:
     with open(path, "rb") as f:
@@ -59,8 +63,9 @@ for path in sys.argv[1:]:
 PYEOF
 
 # Проверка, что в архиве есть всё критичное.
-for f in bridge.py start_bridge.bat 1_SETUP.bat fix_hosts.ps1 README.md \
-         python/pythonw.exe python/python312.dll; do
+for f in bridge.py start_bridge.bat 1_SETUP.bat 2_CHECK_UPDATES.bat \
+         3_UNINSTALL.bat fix_hosts.ps1 remove_hosts.ps1 check_updates.ps1 \
+         README.md python/pythonw.exe python/python312.dll; do
     [ -e "$STAGE/$f" ] || { echo "[build] ОШИБКА: нет $f" >&2; exit 1; }
 done
 

@@ -43,7 +43,7 @@ import time
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 
-VERSION = "2.1.2"
+VERSION = "2.1.3"
 
 
 def _env(name, default):
