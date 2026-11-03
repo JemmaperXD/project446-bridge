@@ -76,11 +76,14 @@ rem Удаляем папку только если это действител�
 if not exist "%BRIDGE_DIR%\bridge.py" goto no_folder_delete
 if not exist "%BRIDGE_DIR%\start_bridge.bat" goto no_folder_delete
 
+echo  Перед удалением закройте игру и чёрное окно Project 446.
+echo.
 choice /C YN /N /M "Удалить папку с мостом (%BRIDGE_DIR%)? [Y/N]: "
 if errorlevel 2 goto done
 
 rem Удаляем папку после выхода из этого скрипта: отдельный cmd подождёт.
 > "%TEMP%\project446_remove.cmd" echo @echo off
+>>"%TEMP%\project446_remove.cmd" echo cd /d "%TEMP%"
 >>"%TEMP%\project446_remove.cmd" echo ping -n 3 127.0.0.1 ^>nul
 >>"%TEMP%\project446_remove.cmd" echo rmdir /s /q "%BRIDGE_DIR%"
 >>"%TEMP%\project446_remove.cmd" echo del /f /q "%%~f0"
