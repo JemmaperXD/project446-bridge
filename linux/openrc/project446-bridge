@@ -7,7 +7,7 @@ description="TCP bridge to gc.project446.com via public HTTP proxies"
 
 directory="/opt/project446-bridge"
 command="/usr/bin/env"
-command_args="BRIDGE_STATE_DIR=/var/lib/project446-bridge /usr/bin/python3 ${directory}/bridge.py"
+command_args="BRIDGE_STATE_DIR=/var/lib/project446-bridge BRIDGE_CONSOLE=0 /usr/bin/python3 ${directory}/bridge.py"
 
 supervisor="supervise-daemon"
 respawn_delay_seconds=3

@@ -28,6 +28,8 @@ Project 446 bridge.
   BRIDGE_TARGET_SNI    (по умолчанию gc.project446.com)
   BRIDGE_STATE_DIR     (по умолчанию папка со скриптом)
   BRIDGE_STICKY_FIRST  (1/0, по умолчанию 1)
+  BRIDGE_CONSOLE       (0/1/auto, по умолчанию auto) — вывод в stdout;
+                       auto = только если stdout является терминалом
 """
 
 import asyncio
@@ -41,7 +43,7 @@ import time
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 
-VERSION = "2.1.1"
+VERSION = "2.1.2"
 
 
 def _env(name, default):
@@ -56,6 +58,22 @@ TARGET_IP = _env("BRIDGE_TARGET_IP", "213.152.43.203")
 TARGET_PORT = int(_env("BRIDGE_TARGET_PORT", "443"))
 TARGET_SNI = _env("BRIDGE_TARGET_SNI", "gc.project446.com")
 STICKY_FIRST = _env("BRIDGE_STICKY_FIRST", "1") != "0"
+CONSOLE = _env("BRIDGE_CONSOLE", "auto").lower()
+
+
+def _console_on():
+    """auto: печатаем только в терминал, чтобы сервис не дублировал лог."""
+    if CONSOLE == "0":
+        return False
+    if CONSOLE == "1":
+        return True
+    try:
+        return bool(sys.stdout is not None and sys.stdout.isatty())
+    except Exception:
+        return False
+
+
+CONSOLE_ON = _console_on()
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATE_DIR = _env("BRIDGE_STATE_DIR", BASE_DIR)
@@ -93,11 +111,12 @@ MAX_CANDIDATES = 16
 ATTEMPTS = 3                # сколько раз пробуем найти туннель под клиента
 BAD_COOLDOWN = 300          # 5 минут карантина
 KEEPALIVE_EVERY = 60
-LISTS_EVERY = 600
+REFRESH_MIN = 60            # не чаще одного обновления списков в минуту
 
 CANDIDATES = []             # очередь кандидатов из списков
 LISTS_TS = 0.0
-SEEN = set()
+SEEN = {}                   # proxy -> время последней выдачи
+SEEN_TTL = 900              # 15 минут: потом адрес можно проверить снова
 
 CONNECT_REQ = (
     "CONNECT %s:%d HTTP/1.1\r\nHost: %s:%d\r\n\r\n"
@@ -120,7 +139,7 @@ def log(*a):
     except Exception:
         pass
     try:
-        if sys.stdout is not None:
+        if CONSOLE_ON and sys.stdout is not None:
             print(msg, flush=True)
     except Exception:
         pass
@@ -259,22 +278,43 @@ async def refresh_candidates():
             text += await http_get(u) + "\n"
         except Exception as e:
             log("не смог скачать список:", type(e).__name__)
+
     cands = list(dict.fromkeys(parse_list(text)))
     random.shuffle(cands)
-    CANDIDATES = [p for p in cands if p not in POOL and p not in SEEN]
-    SEEN.update(CANDIDATES[:2000])
-    LISTS_TS = time.time()
+    now = time.time()
+
+    # Бесплатные прокси оживают и умирают, поэтому старые отметки
+    # «уже проверяли» забываем. Иначе через несколько обновлений все
+    # адреса считаются проверенными и пул перестаёт пополняться.
+    for p, ts in list(SEEN.items()):
+        if now - ts > SEEN_TTL:
+            del SEEN[p]
+
+    def fresh():
+        return [p for p in cands
+                if p not in POOL and p not in SEEN
+                and BAD_UNTIL.get(p, 0) < now]
+
+    CANDIDATES = fresh()
+    if not CANDIDATES and cands:
+        # Все адреса недавно выдавали — перепроверяем по кругу.
+        SEEN.clear()
+        CANDIDATES = fresh()
+
+    LISTS_TS = now
     log("кандидатов из списков:", len(CANDIDATES))
 
 
 async def take_candidates(n):
     global CANDIDATES
-    if len(CANDIDATES) < n and time.time() - LISTS_TS > LISTS_EVERY:
-        await refresh_candidates()
-    if not CANDIDATES:
+    # Не дёргаем списки чаще, чем раз в минуту, даже если очередь пуста.
+    if not CANDIDATES and time.time() - LISTS_TS > REFRESH_MIN:
         await refresh_candidates()
     got = CANDIDATES[:n]
     del CANDIDATES[:n]
+    now = time.time()
+    for p in got:
+        SEEN[p] = now
     return got
 
 
@@ -292,6 +332,10 @@ async def keeper():
     while True:
         try:
             rotate_log()
+            now = time.time()
+            for p, until in list(BAD_UNTIL.items()):
+                if until < now:
+                    del BAD_UNTIL[p]
             async with POOL_LOCK:
                 current = list(POOL)
 
