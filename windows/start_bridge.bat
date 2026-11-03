@@ -35,7 +35,7 @@ if not exist "%BRIDGE%" (
     exit /b 1
 )
 
-findstr /I /C:"gc.project446.com" "%SystemRoot%\System32\drivers\etc\hosts" >nul 2>&1
+findstr /B /I /C:"127.0.0.1 gc.project446.com" "%SystemRoot%\System32\drivers\etc\hosts" >nul 2>&1
 if errorlevel 1 (
     echo.
     echo  ============================================================

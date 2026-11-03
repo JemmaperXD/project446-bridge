@@ -17,10 +17,10 @@ rc-update del "$SVC" default 2>/dev/null || true
 rm -f "/etc/init.d/$SVC"
 rm -rf "$INSTALL_DIR"
 
-if grep -qE '^127\.0\.0\.1[[:space:]]+gc\.project446\.com$' /etc/hosts 2>/dev/null; then
+if grep -qE '^[[:space:]]*127\.0\.0\.1[[:space:]]+gc\.project446\.com[[:space:]]*$' /etc/hosts 2>/dev/null; then
     [ -f /etc/hosts.project446.bak ] || cp -a /etc/hosts /etc/hosts.project446.bak
     sed -i.tmp -e '/^# project446-bridge$/d' \
-        -e '/^127\.0\.0\.1[[:space:]]\{1,\}gc\.project446\.com$/d' /etc/hosts
+        -e '/^[[:space:]]*127\.0\.0\.1[[:space:]]\{1,\}gc\.project446\.com[[:space:]]*$/d' /etc/hosts
     rm -f /etc/hosts.tmp
     echo "[hosts] запись удалена (бэкап: /etc/hosts.project446.bak)"
 fi

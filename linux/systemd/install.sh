@@ -30,10 +30,19 @@ install -d -m 0750 -o "$RUN_USER" -g "$RUN_USER" "$STATE_DIR"
 install -m 0644 "$HERE/$SVC.service" "/etc/systemd/system/$SVC.service"
 
 # /etc/hosts: gc.project446.com -> локальный мост
-if ! grep -qE '^[^#]*[[:space:]]gc\.project446\.com([[:space:]]|$)' /etc/hosts; then
-    [ -f /etc/hosts.project446.bak ] || cp -a /etc/hosts /etc/hosts.project446.bak
-    printf '\n# project446-bridge\n127.0.0.1 gc.project446.com\n' >> /etc/hosts
-    echo "[hosts] добавлено: 127.0.0.1 gc.project446.com"
+HOSTS=/etc/hosts
+HOSTS_LINE='127.0.0.1 gc.project446.com'
+# Рабочей считается только строка, которая начинается с 127.0.0.1.
+# Склеенная запись (старый баг установщика) таковой не считается.
+if ! grep -qE '^[[:space:]]*127\.0\.0\.1[[:space:]]+gc\.project446\.com([[:space:]]|$)' "$HOSTS"; then
+    [ -f "$HOSTS.project446.bak" ] || cp -a "$HOSTS" "$HOSTS.project446.bak"
+    # Гарантируем перевод строки в конце файла: без него новая запись
+    # приклеится к последней строке.
+    if [ -s "$HOSTS" ] && [ -n "$(tail -c 1 "$HOSTS")" ]; then
+        printf '\n' >> "$HOSTS"
+    fi
+    printf '# project446-bridge\n%s\n' "$HOSTS_LINE" >> "$HOSTS"
+    echo "[hosts] добавлено: $HOSTS_LINE"
 else
     echo "[hosts] запись уже есть"
 fi
